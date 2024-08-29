@@ -1,3 +1,4 @@
+import { Sun } from "resium";
 import CesiumWrapper from "../Components/CesiumWrapper"
 
 async function getPosition() {

@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./page.module.css";
 import MainPage from "./main/page";
+import { Viewer } from "resium";
 
 export default function Home() {
   return (
@@ -11,7 +12,7 @@ export default function Home() {
         target='_blank'
         rel='noreferrer noopener'
       >
-        GitHub Source link
+        Helio Maps
       </a>
       <MainPage />
     </main>

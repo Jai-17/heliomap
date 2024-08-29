@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { CesiumType } from '../types/cesium'
-import { Cesium3DTileset, type Entity, type Viewer } from 'cesium';
+import { Cesium3DTileset, CustomSensorVolume, type Entity, type Viewer } from 'cesium-sensor-volumes';
 import type { Position } from '../types/position';
 //NOTE: It is important to assign types using "import type", not "import"
 import { dateToJulianDate } from '../example_utils/date';
@@ -35,7 +35,7 @@ export const CesiumComponent: React.FunctionComponent<{
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [CesiumJs]);
 
     const cleanUpPrimitives = React.useCallback(() => {
         //On NextJS 13.4+, React Strict Mode is on by default.
@@ -79,12 +79,29 @@ export const CesiumComponent: React.FunctionComponent<{
                 });
             });
 
+            cesiumViewer.current.scene.globe.enableLighting = true;
+            cesiumViewer.current.shadows = true;
+            if(cesiumViewer.current.scene.shadowMap){
+                cesiumViewer.current.scene.shadowMap.enabled = true;
+                cesiumViewer.current.scene.shadowMap.size = 2048;
+                cesiumViewer.current.scene.shadowMap.softShadows = true; 
+            }
+
+            // const sensor = new CesiumJs.CustomSensorVolume({
+            //     modelMatrix: CesiumJs.Matrix4.fromTranslation(CesiumJs.Cartesian3.fromDegrees(-122.3472, 47.598, 100)),
+            //     radius: 300.0,
+            //     innerMaterial: CesiumJs.Color.RED.withAlpha(0.5),
+            //     outerMaterial: CesiumJs.Color.YELLOW.withAlpha(0.2),
+            //     show: true, // Ensure the sensor is visible
+            // });
+            // cesiumViewer.current.scene.primitives.add(sensor);
+
             //Set loaded flag
             setIsLoaded(true);
 
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }
-    }, [positions]);
+    }, [positions, CesiumJs, cleanUpPrimitives, resetCamera]);
 
     React.useEffect(() => {
         if (cesiumViewer.current === null && cesiumContainerRef.current) {
@@ -96,7 +113,8 @@ export const CesiumComponent: React.FunctionComponent<{
             cesiumViewer.current = new CesiumJs.Viewer(cesiumContainerRef.current, {
                 //Using the Sandcastle example below
                 //https://sandcastle.cesium.com/?src=3D%20Tiles%20Feature%20Styling.html
-                terrain: CesiumJs.Terrain.fromWorldTerrain()
+                terrain: CesiumJs.Terrain.fromWorldTerrain(),
+                shadows: true
             });
 
             //NOTE: Example of configuring a Cesium viewer
@@ -104,17 +122,17 @@ export const CesiumComponent: React.FunctionComponent<{
         }
         
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [CesiumJs]);
 
     React.useEffect(() => {
         if (isLoaded) return;
         initializeCesiumJs();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [positions, isLoaded]);
+    }, [positions, isLoaded, initializeCesiumJs]);
 
     //NOTE: Examples of typing... See above on "import type"
-    const entities: Entity[] = [];
+    // const entities: Entity[] = [];
     //NOTE: Example of a function that utilizes CesiumJs features
     const julianDate = dateToJulianDate(CesiumJs, new Date());
 

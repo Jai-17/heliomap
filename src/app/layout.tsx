@@ -6,10 +6,10 @@ export const metadata: Metadata = {
   description: "Calculates BIPV potential",
   openGraph: {
     type: "website",
-    siteName: "Cesium in Next.js 14 with TypeScript",
-    title: "Cesium in Next.js 14 with TypeScript",
+    siteName: "Helio Maps",
+    title: "Helio Maps",
     url: `https://nextjs-cesium.vercel.app`,
-    description: "An example Next.js 14 TypeScript project displaying Cesium hosted in Vercel",
+    description: "A project that calculates BIPV potential for LOD-1 models and helps in better visualization",
     images: [{
       url: `https://nextjs-cesium.vercel.app/og.png`
     }]

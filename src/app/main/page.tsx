@@ -5,7 +5,7 @@ async function getPosition() {
   //Mimic server-side stuff...
   return {
     position: {
-      lat: 39.953436,
+      lat: 39.953436, // coordinates of Philadelphia
       lng: -75.164356
     }
   }

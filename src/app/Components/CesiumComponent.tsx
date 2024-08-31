@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { CesiumType } from '../types/cesium'
-import { Cesium3DTileset, CustomSensorVolume, type Entity, type Viewer } from 'cesium-sensor-volumes';
+import { Cesium3DTileset, type Entity, type Viewer, Cartesian3 } from 'cesium';
 import type { Position } from '../types/position';
 //NOTE: It is important to assign types using "import type", not "import"
 import { dateToJulianDate } from '../example_utils/date';
@@ -26,10 +26,10 @@ export const CesiumComponent: React.FunctionComponent<{
         // No need for dependancies since all data is static for this example.
         if (cesiumViewer.current !== null) {
             cesiumViewer.current.scene.camera.setView({
-                destination: CesiumJs.Cartesian3.fromDegrees(-122.3472, 47.598, 370),
+                destination: CesiumJs.Cartesian3.fromDegrees(76.36244, 30.35144, 370), // long, lat, altitude
                 orientation: {
-                  heading: CesiumJs.Math.toRadians(10),
-                  pitch: CesiumJs.Math.toRadians(-10),
+                  heading: CesiumJs.Math.toRadians(10), // direction the camera is facing horizontally 0-north, +ve-east, -ve-west
+                  pitch: CesiumJs.Math.toRadians(-15), // the tilt of the camera, angle from horizon, 0-level with horizon, -ve-downward, +ve-upward(towards sky)
                 },
               });
         }
@@ -47,6 +47,7 @@ export const CesiumComponent: React.FunctionComponent<{
         });
         addedScenePrimitives.current = [];
     }, []);
+
     
     const initializeCesiumJs = React.useCallback(async () => {
         if (cesiumViewer.current !== null) {
@@ -59,6 +60,7 @@ export const CesiumComponent: React.FunctionComponent<{
 
             //Adding tile and adding to addedScenePrimitives to keep track and delete in-case of a re-render.
             const osmBuildingsTilesetPrimitive = cesiumViewer.current.scene.primitives.add(osmBuildingsTileset);
+            console.log(cesiumViewer.current.scene);
             addedScenePrimitives.current.push(osmBuildingsTilesetPrimitive);
             
             //Position camera per Sandcastle demo
@@ -67,7 +69,7 @@ export const CesiumComponent: React.FunctionComponent<{
             //We'll also add our own data here (In Philadelphia) passed down from props as an example
             positions.forEach(p => {
                 cesiumViewer.current?.entities.add({
-                    position: CesiumJs.Cartesian3.fromDegrees(p.lng, p.lat),
+                    position: CesiumJs.Cartesian3.fromDegrees(p.lng, p.lat), // lat, long to cartesian coordinates
                     ellipse: {
                         semiMinorAxis: 50000.0,
                         semiMajorAxis: 50000.0,
@@ -104,6 +106,13 @@ export const CesiumComponent: React.FunctionComponent<{
     }, [positions, CesiumJs, cleanUpPrimitives, resetCamera]);
 
     React.useEffect(() => {
+        if (isLoaded) return;
+        initializeCesiumJs();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [positions, isLoaded, initializeCesiumJs]);
+
+    React.useEffect(() => {
         if (cesiumViewer.current === null && cesiumContainerRef.current) {
             //OPTIONAL: Assign access Token here
             //Guide: https://cesium.com/learn/ion/cesium-ion-access-tokens/
@@ -118,23 +127,75 @@ export const CesiumComponent: React.FunctionComponent<{
             });
 
             //NOTE: Example of configuring a Cesium viewer
-            cesiumViewer.current.clock.clockStep = CesiumJs.ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            cesiumViewer.current.clock.clockStep = CesiumJs.ClockStep.SYSTEM_CLOCK_MULTIPLIER; // SYSTEM_CLOCK means time advances in realtime, multiplier can speed it up or slow down the simulation
+
+            // const osmBuildingsTileset = cesiumViewer.current.scene.primitives.add(CesiumJs.createOsmBuildingsAsync());
+
+            // Function to get Sun's position
+            const getSunPosition = () => {
+                const date = CesiumJs.JulianDate.fromDate(new Date());
+                const sunPosition = CesiumJs.Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(date);
+                const transformMatrix = CesiumJs.Transforms.computeTemeToPseudoFixedMatrix(date);
+                
+                if(transformMatrix){
+                    const sunPositionFixed = CesiumJs.Matrix3.multiplyByVector(
+                        transformMatrix,
+                        sunPosition,
+                        new Cartesian3()
+                    );
+
+                    // Convert to Cartographic for azimuth and elevation calculations
+                    const sunCartographic = CesiumJs.Cartographic.fromCartesian(sunPositionFixed);
+                    const sunAzimuth = CesiumJs.Math.toDegrees(sunCartographic.longitude);
+                    const sunElevation = CesiumJs.Math.toDegrees(sunCartographic.latitude);
+                    console.log('Sun Position:', { sunAzimuth, sunElevation });
+                }else{
+                    console.error('Failed to compute the transformation matrix for the sun position.');
+                }
+            };
+
+            // Function to extract building data
+            const extractBuildingData = (tileset: Cesium3DTileset) => {
+                tileset.tileVisible.addEventListener((tile) => {
+                    const content = tile.content;
+                    for (let i = 0; i < content.featuresLength; i++) {
+                        const feature = content.getFeature(i);
+                        // Access properties like height, longitude, latitude
+                        const longitude = feature.getProperty('longitude') || feature.getProperty('lon');
+                        const latitude = feature.getProperty('latitude') || feature.getProperty('lat');
+                        const height = feature.getProperty('height');
+                        console.log('Building Data:', { latitude, longitude, height });
+                    }
+                });
+            };
+
+            // Ensure osmBuildingsTileset is awaited correctly
+            // CesiumJs.createOsmBuildingsAsync().then((osmBuildingsTileset) => {
+            //     const osmBuildingsTilesetPrimitive = cesiumViewer.current?.scene.primitives.add(osmBuildingsTileset);
+            //     console.log(cesiumViewer.current?.scene);
+            //     if (osmBuildingsTilesetPrimitive instanceof Cesium3DTileset) {
+            //         extractBuildingData(osmBuildingsTilesetPrimitive);
+            //     }
+            // }).catch((error) => {
+            //     console.error('Error loading OSM buildings:', error);
+            // });
+
+            getSunPosition();
+
+            // return() =>{
+            //     cesiumViewer.current?.destroy();
+            // }
         }
         
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [CesiumJs]);
 
-    React.useEffect(() => {
-        if (isLoaded) return;
-        initializeCesiumJs();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [positions, isLoaded, initializeCesiumJs]);
-
     //NOTE: Examples of typing... See above on "import type"
     // const entities: Entity[] = [];
     //NOTE: Example of a function that utilizes CesiumJs features
+
     const julianDate = dateToJulianDate(CesiumJs, new Date());
+
 
     return (
         <div

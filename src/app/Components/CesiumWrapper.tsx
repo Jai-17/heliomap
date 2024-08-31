@@ -6,7 +6,7 @@ import type { CesiumType } from '../types/cesium';
 import type { Position } from '../types/position';
 
 const CesiumDynamicComponent = dynamic(() => import('./CesiumComponent'), {
-    ssr: false
+    ssr: false // server-side-rendering = false, coz cesium requires WebGL, and browser APIs
 });
 
 export const CesiumWrapper:React.FunctionComponent<{

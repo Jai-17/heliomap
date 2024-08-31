@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Cesium in Next.js 14 with TypeScript",
-  description: "An example Next.js 14 TypeScript project displaying Cesium hosted in Vercel",
+  title: "HelioMaps",
+  description: "Calculates BIPV potential",
   openGraph: {
     type: "website",
     siteName: "Cesium in Next.js 14 with TypeScript",

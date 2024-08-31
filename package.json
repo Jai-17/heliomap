@@ -6,13 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "symlink-dir node_modules/cesium/Build/Cesium public/cesium"
   },
   "dependencies": {
-    "cesium": "^1.115.0",
+    "cesium": "^1.120.0",
+    "cesium-sensor-volumes": "^1.32.0",
     "next": "14.1.4",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "resium": "^1.18.2"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -21,6 +24,7 @@
     "copy-webpack-plugin": "^12.0.2",
     "eslint": "^8",
     "eslint-config-next": "14.1.4",
+    "symlink-dir": "^6.0.2",
     "typescript": "^5"
   }
 }

@@ -8,7 +8,7 @@ export default function Home() {
     <main>
       <a
         className={styles['source-link']}
-        href='https://github.com/hyundotio/nextjs-ts-cesium-example'
+        href='https://github.com/Jai-17/heliomap'
         target='_blank'
         rel='noreferrer noopener'
       >
